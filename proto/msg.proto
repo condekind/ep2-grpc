@@ -1,0 +1,56 @@
+// ========================================================================= //
+
+syntax = "proto3";
+
+package msg;
+
+
+// ------------------------------------------------------------------------- //
+
+message Entry {
+    message Key {
+        uint32   key = 1;
+    }
+    message Data {
+        uint32   val = 1;
+        string  desc = 2;
+    }
+}
+
+message Insert {
+    message Req {
+        Entry entry = 1;
+    }
+    message Ans {
+        bool status = 1;
+    }
+}
+
+message Query {
+    message Req {
+        Entry.Key  key  = 1;
+    }
+    message Ans {
+        Entry.Data data = 1;
+    }
+}
+
+message Shutdown {
+    message Req {}
+    message Ans {
+        bool status = 1;
+    }
+}
+
+
+// ------------------------------------------------------------------------- //
+
+service RemoteQuery {
+
+    rpc insert   (Insert.Req)   returns (Insert.Ans)   {}
+    rpc query    (Query.Req)    returns (Query.Ans)    {}
+    rpc shutdown (Shutdown.Req) returns (Shutdown.Ans) {}
+}
+
+
+// ========================================================================= //
