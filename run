@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+# =========================================================================== #
+
+import sys
+
+def parsePort(arg):     return arg.split('=')[-1]
+def parseAddrPort(arg): return arg.split('=')[-1].split(':')
+
+
+def svc_arm(serv_port):
+    
+    return None
+
+
+def cln_arm(serv_addr, serv_port):
+    
+    return None
+
+
+def svc_comp(serv_port, siga_addr, siga_port, matr_addr, matr_port):
+    return None
+
+
+def cln_comp(serv_addr, serv_port):
+    
+    return None
+
+
+def gen():
+    from grpc_tools import protoc
+
+    protoPath        = './proto'
+    pyGenFilesPath   = './src/gen'
+    grpcGenFilesPath = './src/gen'
+    mainProtoFile    = 'msg.proto'
+
+    protoc.main((
+        '',
+        f'--proto_path={protoPath}',
+        f'--python_out={pyGenFilesPath}',
+        f'--grpc_python_out={grpcGenFilesPath}',
+        f'{protoPath}/{mainProtoFile}',
+    ))
+
+
+if __name__ == '__main__':
+
+    prog = sys.argv[1]
+
+    if   prog == 'svc_arm':
+        serv_port = parsePort(sys.argv[2])
+        svc_arm(serv_port)
+
+    elif prog == 'cln_arm':
+        serv_addr, serv_port = parseAddrPort(sys.argv[2])
+        cln_arm(serv_addr, serv_port)
+
+    elif prog == 'svc_comp':
+        serv_port            = parsePort(sys.argv[2])
+        siga_addr, siga_port = parseAddrPort(sys.argv[3])
+        matr_addr, matr_port = parseAddrPort(sys.argv[4])
+        svc_comp(serv_port, siga_addr, siga_port, matr_addr, matr_port)
+
+    elif prog == 'cln_comp':
+        serv_addr, serv_port = parseAddrPort(sys.argv[2])
+        cln_comp(serv_addr, serv_port)
+
+    elif prog == 'gen':
+        gen()
+
+    else:
+        sys.exit(f'Invalid program: {prog}')
+
+
+# =========================================================================== #
