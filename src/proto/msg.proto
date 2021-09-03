@@ -1,0 +1,55 @@
+// msg.proto
+// ========================================================================= //
+
+syntax = "proto3";
+
+package msg;
+
+
+// ------------------------------------------------------------------------- //
+
+// Server error codes
+enum ErrNo {
+    OK = 0;
+    KEY_NOT_FOUND = 1;
+    KEY_ALREADY_PRESENT = 2;
+}
+
+message Val {
+    uint32 data = 1;
+    string desc = 2;
+}
+
+message InsertReq {
+    uint32 key = 1;
+    Val    val = 2;
+}
+message InsertAns {
+    ErrNo errNo = 1;  // note: default is 0 (OK) when unspecified
+}
+
+message QueryReq {
+    uint32  key = 1;
+}
+message QueryAns {
+    ErrNo errNo = 1;  // note: default is 0 (OK) when unspecified
+    Val     val = 2;
+}
+
+message ShutdownReq {}
+message ShutdownAns {
+    bool status = 1;
+}
+
+
+// ------------------------------------------------------------------------- //
+
+service RemoteQuery {
+
+    rpc insert   (InsertReq)   returns (InsertAns)   {}
+    rpc query    (QueryReq)    returns (QueryAns)    {}
+    rpc shutdown (ShutdownReq) returns (ShutdownAns) {}
+}
+
+
+// ========================================================================= //

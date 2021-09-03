@@ -1,53 +1,88 @@
 #!/usr/bin/env python3
 # =========================================================================== #
 
-import sys
+from typing import List
+import logging, sys
 
-def parsePort(arg):     return arg.split('=')[-1]
-def parseAddrPort(arg): return arg.split('=')[-1].split(':')
+# 'argN=PPPP' -> 'PPPP'
+def parsePort(arg: str) -> str:           return arg.split('=')[-1]
 
 
-def svc_arm(serv_port):
-    
+# 'argN=A.A.A.A:PPPP' -> ['A.A.A.A', 'PPPP']
+def parseAddrPort(arg: str) -> List[str]: return arg.split('=')[-1].split(':')
+
+
+def demo():
+    from src.server import run_server
+    run_server()
+
+
+def svc_arm(serv_port: str) -> None:
+    demo()
     return None
 
 
-def cln_arm(serv_addr, serv_port):
-    
+def cln_arm(serv_addr: str, serv_port: str) -> None:
+    demo()
     return None
 
 
-def svc_comp(serv_port, siga_addr, siga_port, matr_addr, matr_port):
+def svc_comp(serv_port: str, siga_addr: str, siga_port: str, matr_addr: str, matr_port: str) -> None:
+    demo()
     return None
 
 
-def cln_comp(serv_addr, serv_port):
-    
+def cln_comp(serv_addr: str, serv_port: str) -> None:
+    demo()
     return None
 
 
-def gen():
+def compile_proto(betterproto: bool = False):
+    from pathlib import Path
     from grpc_tools import protoc
 
-    protoPath        = './proto'
-    pyGenFilesPath   = './src/gen'
-    grpcGenFilesPath = './src/gen'
-    mainProtoFile    = 'msg.proto'
+    rootPath        = '.'
+    srcPath         = f'{rootPath}/src'
+    protoPath       = f'{srcPath}/proto'
+    python_out      = f'{rootPath}'
+    grpc_python_out = f'{rootPath}'
+    protoFiles      = [str(p) for p in Path(f'{protoPath}').glob('*.proto')]
 
-    protoc.main((
-        '',
-        f'--proto_path={protoPath}',
-        f'--python_out={pyGenFilesPath}',
-        f'--grpc_python_out={grpcGenFilesPath}',
-        f'{protoPath}/{mainProtoFile}',
-    ))
+    if betterproto:
+        print('Using betterproto...', file=sys.stderr)
+        protoc.main((
+                     '',
+                     f'-I{srcPath}',
+                     f'--python_out={python_out}',
+                     f'--grpc_python_out={grpc_python_out}',
+                     f'--python_betterproto_out={rootPath}/proto',
+                     *protoFiles,
+        ))
+    else:
+        protoc.main((
+                     '',
+                     f'-I{srcPath}',
+                     f'--python_out={python_out}',
+                     f'--grpc_python_out={grpc_python_out}',
+                     *protoFiles,
+        ))
 
 
 if __name__ == '__main__':
 
-    prog = sys.argv[1]
+    prog = sys.argv[1] if len(sys.argv) > 1 else None
 
-    if   prog == 'svc_arm':
+    if prog == 'server':
+        #from src.server import run_server
+        demo()
+
+    elif prog == 'client':
+        from src.client import ClientApp
+        logging.basicConfig()
+        client = ClientApp()
+        client.run()
+
+    elif prog == 'svc_arm':
         serv_port = parsePort(sys.argv[2])
         svc_arm(serv_port)
 
@@ -65,8 +100,13 @@ if __name__ == '__main__':
         serv_addr, serv_port = parseAddrPort(sys.argv[2])
         cln_comp(serv_addr, serv_port)
 
-    elif prog == 'gen':
-        gen()
+    elif prog == 'compile_proto':
+        try:
+            import betterproto
+        except:
+            compile_proto()
+        else:
+            compile_proto(betterproto=True)
 
     else:
         sys.exit(f'Invalid program: {prog}')
