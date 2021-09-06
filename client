@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+if [[ "$(python3 --version)" != "$(./venv/bin/python3 --version)" ]]; then
+    printf "[WW]: Your python version is not the same as .venv/bin/python\n" >&2
+fi
+
+if [[ $# -eq 0 ]]; then
+    printf "Running locally on port 50051...\n" >&2
+    python3 run cln_arm arg=localhost:50051 < misc/input.txt
+else
+    printf "Starting client with input=misc/client_$1.txt\n" >&2
+    python3 run cln_comp arg=localhost:50051 < misc/client_$1.txt
+fi

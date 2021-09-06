@@ -13,6 +13,8 @@ enum ErrNo {
     OK = 0;
     KEY_NOT_FOUND = 1;
     KEY_ALREADY_PRESENT = 2;
+    EXT_NOT_FOUND = 3;
+    SERVER_SHUTDOWN = 7;
 }
 
 message Val {
@@ -36,6 +38,13 @@ message QueryAns {
     Val     val = 2;
 }
 
+// Used by the forwarding server (svc_comp)
+message QueryAllAns {
+    ErrNo errNo = 1;  // note: default is 0 (OK) when unspecified
+    Val    siga = 2;
+    Val    matr = 3;
+}
+
 message ShutdownReq {}
 message ShutdownAns {
     bool status = 1;
@@ -45,11 +54,14 @@ message ShutdownAns {
 // ------------------------------------------------------------------------- //
 
 service RemoteQuery {
-
     rpc insert   (InsertReq)   returns (InsertAns)   {}
     rpc query    (QueryReq)    returns (QueryAns)    {}
     rpc shutdown (ShutdownReq) returns (ShutdownAns) {}
 }
 
+service FwdQuery {
+    rpc queryAll (QueryReq)    returns (QueryAllAns) {}
+    rpc shutdown (ShutdownReq) returns (ShutdownAns) {}
+}
 
 // ========================================================================= //

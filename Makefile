@@ -2,44 +2,51 @@
 
 srcdir = ./src
 gendir = ./proto
-genobj = $(gendir)/*_pb2*.py
+genobj = $(gendir)/msg_pb2.py $(gendir)/msg_pb2_grpc.py
 
 
 # --------------------------------------------------------------------------- #
 
-# Ensures `compile_proto` rule runs if a $genobj is needed
-$(genobj): compile_proto;
+demo: $(genobj)
+ifeq (, $(shell command -v tmux))
+# tmux not found: running demo with each host in a background job
+	@python3 run svc_arm arg=50052 &
+	@python3 run svc_arm arg=50053 &
+	@python3 run svc_comp arg1=50051 arg2=localhost:50052 arg3=localhost:50053 &
+	@sleep 1.618 && python3 run cln_comp arg=localhost:50051 < misc/client_512.txt
+else
+# tmux found: running demo with a session for each *server*
+	@tmux kill-session -t svc_arm_session  2>/dev/null || true
+	@tmux kill-session -t svc_arm_session  2>/dev/null || true
+	@tmux kill-session -t svc_comp_session 2>/dev/null || true
+	@command tmux new-session -d -s svc_siga_session 'python3 run svc_arm arg=50052'
+	@command tmux new-session -d -s svc_matr_session 'python3 run svc_arm arg=50053'
+	@command tmux new-session -d -s svc_comp_session 'python3 run svc_comp arg1=50051 arg2=localhost:50052 arg3=localhost:50053'
+	@sleep 1.618 && python3 run cln_comp arg=localhost:50051 < misc/client_512.txt
+endif
 
 run_serv_arm: $(genobj)
-	./run svc_arm $(arg)
+	@python3 run svc_arm $(arg)
 
 run_cli_arm: $(genobj)
-	./run cln_arm $(arg)
+	@python3 run cln_arm $(arg)
 
 run_serv_comp: $(genobj)
-	./run svc_comp $(arg1) $(arg2) $(arg3)
+	@python3 run svc_comp $(arg1) $(arg2) $(arg3)
 
 run_cli_comp: $(genobj)
-	./run cln_comp $(arg)
+	@python3 run cln_comp $(arg)
 
-run: FORCE
-	./run server &
-	./run client
+# Protobuf compilation (generate gRPC files)
+$(genobj):
+	@python3 run compile_proto 2>/dev/null
 
-FORCE:
-
-# Generates _pb2 and _pb2_grpc files
-compile_proto:
-	$(info Generating gRPC files...)
-	@./run compile_proto
-
-# Removes generated files and silently removes python ugly import workarounds
+# Removes generated files
 clean:
 	rm -rf $(genobj)
 	rm -rf ./__pycache__
 	rm -rf ./*/__pycache__
 	rm -rf ./*/*/__pycache__
-	rm -rf ./proto/msg.py
 
 
 # =========================================================================== #

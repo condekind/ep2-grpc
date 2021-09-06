@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+if [[ "$(python3 --version)" != "$(./.venv/bin/python3 --version)" ]]; then
+    printf "[WW]: Your python version is not the same as .venv/bin/python\n" >&2
+fi
+
+printf "Serving on port 50051...\n" >&2
+if [[ $# -eq 0 ]]; then
+    python3 run svc_arm arg=50051
+else
+    python3 run svc_comp arg1=50051 arg2=localhost:50052 arg3=localhost:50053
+fi

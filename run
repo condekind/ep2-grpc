@@ -2,42 +2,16 @@
 # =========================================================================== #
 
 from typing import List
-import logging, sys
+import sys
 
 # 'argN=PPPP' -> 'PPPP'
 def parsePort(arg: str) -> str:           return arg.split('=')[-1]
 
-
 # 'argN=A.A.A.A:PPPP' -> ['A.A.A.A', 'PPPP']
 def parseAddrPort(arg: str) -> List[str]: return arg.split('=')[-1].split(':')
 
-
-def demo():
-    from src.server import run_server
-    run_server()
-
-
-def svc_arm(serv_port: str) -> None:
-    demo()
-    return None
-
-
-def cln_arm(serv_addr: str, serv_port: str) -> None:
-    demo()
-    return None
-
-
-def svc_comp(serv_port: str, siga_addr: str, siga_port: str, matr_addr: str, matr_port: str) -> None:
-    demo()
-    return None
-
-
-def cln_comp(serv_addr: str, serv_port: str) -> None:
-    demo()
-    return None
-
-
-def compile_proto(betterproto: bool = False):
+# Compiles msg.proto into msg_pb2.py and msg_pb2_grpc.py
+def compile_proto():
     from pathlib import Path
     from grpc_tools import protoc
 
@@ -48,68 +22,50 @@ def compile_proto(betterproto: bool = False):
     grpc_python_out = f'{rootPath}'
     protoFiles      = [str(p) for p in Path(f'{protoPath}').glob('*.proto')]
 
-    if betterproto:
-        print('Using betterproto...', file=sys.stderr)
-        protoc.main((
-                     '',
-                     f'-I{srcPath}',
-                     f'--python_out={python_out}',
-                     f'--grpc_python_out={grpc_python_out}',
-                     f'--python_betterproto_out={rootPath}/proto',
-                     *protoFiles,
-        ))
-    else:
-        protoc.main((
-                     '',
-                     f'-I{srcPath}',
-                     f'--python_out={python_out}',
-                     f'--grpc_python_out={grpc_python_out}',
-                     *protoFiles,
-        ))
+    protoc.main(('',
+                 f'--mypy_out={rootPath}',
+                 f'-I{srcPath}',
+                 f'--python_out={python_out}',
+                 f'--grpc_python_out={grpc_python_out}',
+                 *protoFiles,
+    ))
 
 
 if __name__ == '__main__':
 
     prog = sys.argv[1] if len(sys.argv) > 1 else None
 
-    if prog == 'server':
-        #from src.server import run_server
-        demo()
-
-    elif prog == 'client':
-        from src.client import ClientApp
-        logging.basicConfig()
-        client = ClientApp()
-        client.run()
-
-    elif prog == 'svc_arm':
+    if prog == 'svc_arm':
+        from src.server import ServerManager
         serv_port = parsePort(sys.argv[2])
-        svc_arm(serv_port)
+        sm = ServerManager(mode=prog, port=serv_port)
+        sm.serve()
 
     elif prog == 'cln_arm':
+        from src.client import ClientApp
         serv_addr, serv_port = parseAddrPort(sys.argv[2])
-        cln_arm(serv_addr, serv_port)
+        client = ClientApp(mode=prog)
+        client.run(ip=serv_addr, port=serv_port)
 
     elif prog == 'svc_comp':
+        from src.server import ServerManager
         serv_port            = parsePort(sys.argv[2])
         siga_addr, siga_port = parseAddrPort(sys.argv[3])
         matr_addr, matr_port = parseAddrPort(sys.argv[4])
-        svc_comp(serv_port, siga_addr, siga_port, matr_addr, matr_port)
+        sm = ServerManager(mode=prog, port=serv_port,
+                           addrSiga=siga_addr, portSiga=siga_port,
+                           addrMatr=matr_addr, portMatr=matr_port)
+        sm.serve()
 
     elif prog == 'cln_comp':
+        from src.client import ClientApp
         serv_addr, serv_port = parseAddrPort(sys.argv[2])
-        cln_comp(serv_addr, serv_port)
+        client = ClientApp(mode=prog)
+        client.run(ip=serv_addr, port=serv_port)
 
-    elif prog == 'compile_proto':
-        try:
-            import betterproto
-        except:
-            compile_proto()
-        else:
-            compile_proto(betterproto=True)
+    elif prog == 'compile_proto': compile_proto()
 
-    else:
-        sys.exit(f'Invalid program: {prog}')
+    else: sys.exit(f'Invalid program: {prog}')
 
 
 # =========================================================================== #

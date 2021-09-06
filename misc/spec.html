@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>
+        TP
+    </title>
+</head>
+<body>
+    <section id="region-main" aria-label="Conteúdo">
+        <span class="notifications" id="user-notifications">
+        </span>
+        <div role="main" id="yui_3_17_2_1_1630783055044_29">
+            <span id="maincontent">
+            </span>
+            <h2>
+                Segundo exercício de programação
+            </h2>
+            <div class="box py-3 generalbox center clearfix" id="yui_3_17_2_1_1630783055044_31">
+                <div class="no-overflow" id="yui_3_17_2_1_1630783055044_30">
+                    <h4 dir="ltr" style="text-align: left;">
+                        Introdução
+                    </h4>
+                    <p>
+                        Neste exercício vamos praticar o desenvolvimento de aplicações baseadas em chamdas de procedimento remotos (RPC). Na área de desenvolvimento de aplicações em nuvem, RPCs são provavelmente a técnica mais utilizada hoje para comunicação entre partes de
+                        um serviço em rede. Mesmo quando a comunicação se dá por sistemas de filas de mensagens, normalmente a interface de programação é construída sobre RPCs. Muitas vezes, diversos serviços baseados em RPC são interligados entre si formando serviços mais
+                        complexos, como no caso do que se costuma chamar de arquiteturas de microsserviços.
+                    </p>
+                    <p>
+                        Entre os frameworks de programação com RPC existem diversas opções. Neste exercício usaremos gRPC, por ser das opções populares que não estão presas a ambiente de desenvolvimento específicos (como Flask ou node.js, por exemplo).
+                        <br>
+                    </p>
+                    <h4>
+                        Objetivo
+                        <br>
+                    </h4>
+                    <p>
+                        Neste exercício você deve desenvolver, usando gRPC, um serviço simples de armazenamento de dados e compor dois servidores desse serviço para construir um serviço mais elaborado. Dessa forma, a implementação pode ser dividida em duas partes: o serviço
+                        de armazenamento e o serviço composto.
+                    </p>
+                    <h4>
+                        Primeira parte: um servidor de armazenamento de dados
+                    </h4>
+                    <p>
+                        Primeiramente, seu objetivo é criar um par cliente/servidor que se comunique por gRPC para criar um serviço de armazenamento de dados, do tipo chave/valor.
+                        <br>
+                    </p>
+                    <p>
+                        Seu servidor deve exportar o seguintes procedimentos:
+                    </p>
+                    <ul>
+                        <li>
+                            inserção: recebe como parâmetros um inteiro positivo (chave), um string (desc) e um outro inteiro positivo (valor) e armazena desc e valor em um dicionário, associados à chave, caso ela ainda não exista, retornando zero; caso a chave já exista o conteúdo
+                            não deve ser alterado e o valor -1 deve ser retornado;
+                        </li>
+                        <li>
+                            consulta: recebe como parâmetros um inteiro positivo (chave) e retorna o conteúdo do string e valor associados à chave, caso ela exista, ou um string nulo e o valor zero caso contrário;
+                        </li>
+                        <li>
+                            término: um procedimento sem parâmetros que indica que o servidor deve terminar sua execução; nesse caso o servidor deve responder com zero e terminar sua execução depois da resposta.
+                        </li>
+                    </ul>
+                    <p>
+                        O programa servidor deve receber um parâmetro de linha de comando com o número do porto a ser usado por ele. Nenhuma mensagem deve ser escrita na saída padrão durante sua execução normal (mensagens de erro, obviamente, são uma exceção).
+                    </p>
+                    <p>
+                    </p>
+                    <p>
+                        O programa cliente deve receber como parâmetro um string com o nome ou endereço IP da máquina onde o servidor executa e o número do porto, separados por ":" (p.ex., "localhost:5555" ou "cristal.dcc.ufmg.br:6789").&nbsp;
+                        <br>
+                    </p>
+                    <p>
+                        O cliente deve ler comandos da entrada padrão, segundo a seguinte forma (os programas devem poder funcionar com a entrada redirecionada para um arquivo):
+                    </p>
+                    <ul>
+                        <li>
+                            <code>
+                                I,ch,um string de descrição,val
+                            </code>
+                            - insere no servidor a chave ch, associada ao string e ao valor val, escreve na saída padrão o valor de retorno do procedimento (0 ou -1);
+                            <br>
+                        </li>
+                        <li>
+                            <code>
+                                C,ch
+                            </code>
+                            - consulta o servidor pelo conteúdo associado à chave ch e escreve na saída o string e o valor, separados por uma vírgula, ou apenas -1, caso a chave não seja encontrada;
+                            <br>
+                        </li>
+                        <li>
+                            <code>
+                                T
+                            </code>
+                            - termina a operação do servidor, envia zero como valor de retorno e termina.
+                        </li>
+                    </ul>
+                    <p>
+                        Qualquer outro conteúdo que não comece com I, C ou T deve ser simplesmente ignorado; os comandos I e C usam vírgulas como separadores; o único lugar onde espaços são permitidos é dentro do string de descrição.
+                    </p>
+                    <p>
+                    </p>
+                    <h4>
+                        Segunda parte: um servidor que combina serviços
+                    </h4>
+                    <p>
+                        Na UFMG, para gerar as informações dos alunos que participam do programa alunos conectados, que distribui chips de dados para alunos assistidos pela FUMP, há duas consultas às bases da UFMG para enviar os dados para o portal do programa: num primeiro
+                        momento, com o CPF de cada estudante, consultamos a base do SIGA para obter dados de cadastro (por exemplo, nome e número de matrícula); depois, com o número de matrícula, consultamos a base de matrículas para obter o nome do curso e o número de créditos
+                        em que cada estudante se matriculou no semestre. Esse tipo de operação de integração é muito comum em serviços em nuvem e vamos criar um pequeno caso de uso nesta parte.
+                        <br>
+                    </p>
+                    <p>
+                        Seu objetivo final é implementar um serviço de consulta que encadeia as informações de dois servidores de armazenamento, digamos, siga e matricula. Ele recebe como parâmetros da linha de comando o número do porto que deve utilizar para receber conexões,
+                        os endereços dos servidores siga e matricula, nessa ordem, no mesmo formato usado para o cliente do serviço de armazenamento da primeira parte (endereço:porto).
+                    </p>
+                    <p>
+                        O servidor nesse caso aceita apenas dois comandos:
+                        <br>
+                    </p>
+                    <ul>
+                        <li>
+                            consulta: recebe como parâmetro o inteiro positivo ch, consulta o servidor siga pelo conteúdo associado à chave ch (como se fosse o CPF), recebendo como resposta o string nome e o valor matr (como um número de matrícula); consulta então o servidor
+                            matricula com a chave matr e recebe como resposta o string curso e o valor cred (como o número de créditos); finalmente, envia como valor de retorno os dados para
+                            <code>
+                                nome
+                            </code>
+                            ,
+                            <code>
+                                matr
+                            </code>
+                            ,
+                            <code>
+                                curso
+                            </code>
+                            e
+                            <code>
+                                cred
+                            </code>
+                            ; caso o primeiro servidor retorne com erro, retorna apenas strings vazios e os valores como zero; se só o segundo servidor retornar com erro, retorna o segundo string como "N/M" e o valor como zero.
+                        </li>
+                        <li>
+                            <code>
+                                T
+                            </code>
+                            - termina a operação dos servidores siga e matricula, envia a soma dos valores de ambos como valor de retorno e termina.
+                        </li>
+                    </ul>
+                    O cliente é bastante semelhante ao cliente da primeira parte: o programa&nbsp; deve receber como parâmetro um string com o nome ou endereço IP da máquina onde o servidor conserv executa e o número do porto, separados por ":" (p.ex., "localhost:5555" ou
+                    "cristal.dcc.ufmg.br:6789").&nbsp;
+                    <br>
+                    <br>
+                    <p>
+                    </p>
+                    <p>
+                        O cliente deve ler comandos da entrada padrão, segundo a seguinte forma (os programas devem poder funcionar com a entrada redirecionada para um arquivo):
+                    </p>
+                    <ul>
+                        <li>
+                            <code>
+                                C,ch
+                            </code>
+                            - consulta o servidor pelo conteúdo associado à chave ch e escreve na saída os valores de nome, matr, curso e cred,separados por  vírgulas, ou apenas -1, caso a chave não seja encontrada;
+                            <br>
+                        </li>
+                        <li>
+                            <code>
+                                T
+                            </code>
+                            - termina a operação do servidor, envia zero como valor de retorno e termina.
+                        </li>
+                    </ul>
+                    <p>
+                        Qualquer outro conteúdo que não comece com C ou T deve ser simplesmente ignorado; o comando C usa uma vírgula como separador.
+                    </p>
+
+                    <h4>
+
+                        Requisitos não funcionais:
+                    </h4>
+                    <p>
+                        O código deve usar apenas C/C++ padrão ou Python, sem bibliotecas além das consideradas padrão. Não serão aceitas outras bibliotecas, nem o uso de recursos como E/S assíncrona em Python. A ideia é que os programas sejam simples, mesmo. O código deve observar
+                        exatamente o formato de saída descrito, para garantir a correção automática. Programas que funcionem mas produzam saída fora do esperado serão penalizados.
+                        <br>
+                    </p>
+                    <p>
+                        O material desenvolvido por você deve executar sem erros nas máquinas linux do laboratório de graduação. A correção será feita naquelas máquinas e programas que não compilarem, não seguirem as determinações quanto a nomes, parâmetros de entrada e formato
+                        da saída, ou apresentarem erros durante a execução serão desconsiderados.
+                    </p>
+                    <br>
+                    <h4> O que deve ser entregue:
+                    </h4>
+                    <p>
+                        Você deve entregar um arquivo .zip&nbsp; incluindo todo o código 
+                        desenvolvido por você, com um makefile como descrito a seguir. 
+                        Considerando a simplicidade do sistema, um relatório final em PDF é 
+                        opcional, caso você ache importante documentar decisões
+                        de projeto especiais. Entretanto, especialmente na ausência do 
+                        relatório, todo o código deve ser adequadamente comentado.
+                        <br>
+                    </p>
+
+                    <p>
+
+                        Preste atenção nos prazos: entregas com atraso não serão aceitas.
+                    </p>
+                    <br>
+                    <p>
+                    </p>
+                    <h4>
+                        O makefile a ser entregue:
+                    </h4>
+                    <p>
+                        Junto com o código deve ser entregue um makefile que inclua, pelo menos, as seguintes regras:
+                    </p>
+                    <br>
+                    <ul>
+                        <li>
+                            <code>
+                                clean
+                            </code>
+                            - remove todos os arquivos intermediários, deixando apenas os arquivos produzidos por você para e entrega
+                        </li>
+                        <li>
+                            <code>
+                                run_cli_arm
+                            </code>
+                            - executa o programa cliente da primeira parte
+                        </li>
+                        <li>
+                            <code>
+                                run_serv_arm
+                            </code>
+                            - executa o programa servidor da primeira parte
+                        </li>
+                        <li>
+                            <code>
+                                run_serv_comp
+                            </code>
+                            - executa o programa servidor da segunda parte
+                        </li>
+                        <li>
+                            <code>
+                                run_cli_comp
+                            </code>
+                            - executa o programa cliente da segunda parte
+                        </li>
+                    </ul>
+                    <p>
+                    </p>
+                    <p>
+                        As regras do tipo "run_*" devem se certificar de disparar todas as regras intermediárias que podem ser necessárias para se obter um programa executável, como executar o compilador de stubs e gerar códigos executáveis, no caso de C/C++.
+                        <br>
+                    </p>
+                    <p>
+                    </p>
+                    <p>
+                        Para o make run funcionar, você pode considerar que os comandos serão executados da seguinte forma (possivelmente, em diferentes terminais):
+                        <br>
+                    </p>
+                    <code>
+                        make run_serv_arm arg=5555
+                    </code>
+                    <br>
+                    <code>
+                        make run_cli_arm arg=localhost:5555 
+                    </code>
+                    <br>
+                    <code>
+                        make run_serv_arm arg=6666
+                    </code>
+                    <br>
+                    <code>
+                        make run_cli_arm arg=localhost:6666
+                    </code>
+                    <br>
+                    <code>
+                        make run_serv_comp arg1=7777 arg2=localhost:5555 arg3=localhost:6666
+                    </code>
+                    <br>
+                    <code>
+                        make run_cli_comp arg=localhost:7777 
+                    </code>
+                    <br>
+                    <p>
+                        <br>
+                    </p>
+                    <p>
+                        Obviamente, o valor dos argumentos pode variar. Para poder executar os comandos, no makefile, supondo que os programas tenham nomes&nbsp;"svc_arm" e "cln_arm", "svc_comp" e "cln_comp", as regras seriam:
+                    </p>
+                    <code>
+                        run_serv_arm:
+                    </code>
+                    <br>
+                    <code>
+                        &nbsp;&nbsp;&nbsp;&nbsp; ./svc_arm $(arg)
+                    </code>
+                    <br>
+                    <code>
+                        run_cli_arm:
+                    </code>
+                    <br>
+                    <code>
+                        &nbsp;&nbsp;&nbsp;&nbsp; ./cln_arm $(arg)
+                    </code>
+                    <br>
+                    <code>
+                        run_serv_comp:
+                    </code>
+                    <br>
+                    <code>
+                        &nbsp;&nbsp;&nbsp;&nbsp; ./svc_comp $(arg1) $(arg2) $(arg3)
+                    </code>
+                    <br>
+                    <code>
+                        run_cli_comp:
+                    </code>
+                    <br>
+                    <code>
+                        &nbsp;&nbsp;&nbsp;&nbsp; ./cln_comp $(arg)
+                    </code>
+                    <br>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>

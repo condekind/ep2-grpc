@@ -1,0 +1,24 @@
+
+
+[tool.poetry]
+name = "rpc"
+version = "0.1.0"
+description = "FSPD assignment using gRPC to manage a key-val storage (kindly named NoobDB)"
+authors = ["Bruno Conde Kind <brunocondekind@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+
+[tool.poetry.dependencies]
+python = "^3.8"
+grpcio = "^1.39.0"
+grpcio-tools = "^1.39.0"
+
+
+[tool.poetry.group.dev.dependencies]
+mypy-protobuf = "^2.9"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

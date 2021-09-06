@@ -1,0 +1,86 @@
+Segundo exercício de programação
+Introdução
+Neste exercício vamos praticar o desenvolvimento de aplicações baseadas em chamdas de procedimento remotos (RPC). Na área de desenvolvimento de aplicações em nuvem, RPCs são provavelmente a técnica mais utilizada hoje para comunicação entre partes de um serviço em rede. Mesmo quando a comunicação se dá por sistemas de filas de mensagens, normalmente a interface de programação é construída sobre RPCs. Muitas vezes, diversos serviços baseados em RPC são interligados entre si formando serviços mais complexos, como no caso do que se costuma chamar de arquiteturas de microsserviços.
+
+Entre os frameworks de programação com RPC existem diversas opções. Neste exercício usaremos gRPC, por ser das opções populares que não estão presas a ambiente de desenvolvimento específicos (como Flask ou node.js, por exemplo).
+
+Objetivo
+Neste exercício você deve desenvolver, usando gRPC, um serviço simples de armazenamento de dados e compor dois servidores desse serviço para construir um serviço mais elaborado. Dessa forma, a implementação pode ser dividida em duas partes: o serviço de armazenamento e o serviço composto.
+
+Primeira parte: um servidor de armazenamento de dados
+Primeiramente, seu objetivo é criar um par cliente/servidor que se comunique por gRPC para criar um serviço de armazenamento de dados, do tipo chave/valor.
+
+Seu servidor deve exportar o seguintes procedimentos:
+
+inserção: recebe como parâmetros um inteiro positivo (chave), um string (desc) e um outro inteiro positivo (valor) e armazena desc e valor em um dicionário, associados à chave, caso ela ainda não exista, retornando zero; caso a chave já exista o conteúdo não deve ser alterado e o valor -1 deve ser retornado;
+consulta: recebe como parâmetros um inteiro positivo (chave) e retorna o conteúdo do string e valor associados à chave, caso ela exista, ou um string nulo e o valor zero caso contrário;
+término: um procedimento sem parâmetros que indica que o servidor deve terminar sua execução; nesse caso o servidor deve responder com zero e terminar sua execução depois da resposta.
+O programa servidor deve receber um parâmetro de linha de comando com o número do porto a ser usado por ele. Nenhuma mensagem deve ser escrita na saída padrão durante sua execução normal (mensagens de erro, obviamente, são uma exceção).
+
+O programa cliente deve receber como parâmetro um string com o nome ou endereço IP da máquina onde o servidor executa e o número do porto, separados por ":" (p.ex., "localhost:5555" ou "cristal.dcc.ufmg.br:6789"). 
+
+O cliente deve ler comandos da entrada padrão, segundo a seguinte forma (os programas devem poder funcionar com a entrada redirecionada para um arquivo):
+
+I,ch,um string de descrição,val - insere no servidor a chave ch, associada ao string e ao valor val, escreve na saída padrão o valor de retorno do procedimento (0 ou -1);
+C,ch - consulta o servidor pelo conteúdo associado à chave ch e escreve na saída o string e o valor, separados por uma vírgula, ou apenas -1, caso a chave não seja encontrada;
+T - termina a operação do servidor, envia zero como valor de retorno e termina.
+Qualquer outro conteúdo que não comece com I, C ou T deve ser simplesmente ignorado; os comandos I e C usam vírgulas como separadores; o único lugar onde espaços são permitidos é dentro do string de descrição.
+
+Segunda parte: um servidor que combina serviços
+Na UFMG, para gerar as informações dos alunos que participam do programa alunos conectados, que distribui chips de dados para alunos assistidos pela FUMP, há duas consultas às bases da UFMG para enviar os dados para o portal do programa: num primeiro momento, com o CPF de cada estudante, consultamos a base do SIGA para obter dados de cadastro (por exemplo, nome e número de matrícula); depois, com o número de matrícula, consultamos a base de matrículas para obter o nome do curso e o número de créditos em que cada estudante se matriculou no semestre. Esse tipo de operação de integração é muito comum em serviços em nuvem e vamos criar um pequeno caso de uso nesta parte.
+
+Seu objetivo final é implementar um serviço de consulta que encadeia as informações de dois servidores de armazenamento, digamos, siga e matricula. Ele recebe como parâmetros da linha de comando o número do porto que deve utilizar para receber conexões, os endereços dos servidores siga e matricula, nessa ordem, no mesmo formato usado para o cliente do serviço de armazenamento da primeira parte (endereço:porto).
+
+O servidor nesse caso aceita apenas dois comandos:
+consulta: recebe como parâmetro o inteiro positivo ch, consulta o servidor siga pelo conteúdo associado à chave ch (como se fosse o CPF), recebendo como resposta o string nome e o valor matr (como um número de matrícula); consulta então o servidor matricula com a chave matr e recebe como resposta o string curso e o valor cred (como o número de créditos); finalmente, envia como valor de retorno os dados para nome, matr, curso e cred; caso o primeiro servidor retorne com erro, retorna apenas strings vazios e os valores como zero; se só o segundo servidor retornar com erro, retorna o segundo string como "N/M" e o valor como zero.
+T - termina a operação dos servidores siga e matricula, envia a soma dos valores de ambos como valor de retorno e termina.
+O cliente é bastante semelhante ao cliente da primeira parte: o programa  deve receber como parâmetro um string com o nome ou endereço IP da máquina onde o servidor conserv executa e o número do porto, separados por ":" (p.ex., "localhost:5555" ou "cristal.dcc.ufmg.br:6789"). 
+O cliente deve ler comandos da entrada padrão, segundo a seguinte forma (os programas devem poder funcionar com a entrada redirecionada para um arquivo):
+
+C,ch - consulta o servidor pelo conteúdo associado à chave ch e escreve na saída os valores de nome, matr, curso e cred,separados por vírgulas, ou apenas -1, caso a chave não seja encontrada;
+T - termina a operação do servidor, envia zero como valor de retorno e termina.
+Qualquer outro conteúdo que não comece com C ou T deve ser simplesmente ignorado; o comando C usa uma vírgula como separador.
+
+Requisitos não funcionais:
+O código deve usar apenas C/C++ padrão ou Python, sem bibliotecas além das consideradas padrão. Não serão aceitas outras bibliotecas, nem o uso de recursos como E/S assíncrona em Python. A ideia é que os programas sejam simples, mesmo. O código deve observar exatamente o formato de saída descrito, para garantir a correção automática. Programas que funcionem mas produzam saída fora do esperado serão penalizados.
+
+O material desenvolvido por você deve executar sem erros nas máquinas linux do laboratório de graduação. A correção será feita naquelas máquinas e programas que não compilarem, não seguirem as determinações quanto a nomes, parâmetros de entrada e formato da saída, ou apresentarem erros durante a execução serão desconsiderados.
+
+O que deve ser entregue:
+Você deve entregar um arquivo .zip  incluindo todo o código desenvolvido por você, com um makefile como descrito a seguir. Considerando a simplicidade do sistema, um relatório final em PDF é opcional, caso você ache importante documentar decisões de projeto especiais. Entretanto, especialmente na ausência do relatório, todo o código deve ser adequadamente comentado.
+
+Preste atenção nos prazos: entregas com atraso não serão aceitas.
+
+O makefile a ser entregue:
+Junto com o código deve ser entregue um makefile que inclua, pelo menos, as seguintes regras:
+
+clean - remove todos os arquivos intermediários, deixando apenas os arquivos produzidos por você para e entrega
+run_cli_arm - executa o programa cliente da primeira parte
+run_serv_arm - executa o programa servidor da primeira parte
+run_serv_comp - executa o programa servidor da segunda parte
+run_cli_comp - executa o programa cliente da segunda parte
+As regras do tipo "run_*" devem se certificar de disparar todas as regras intermediárias que podem ser necessárias para se obter um programa executável, como executar o compilador de stubs e gerar códigos executáveis, no caso de C/C++.
+
+Para o make run funcionar, você pode considerar que os comandos serão executados da seguinte forma (possivelmente, em diferentes terminais):
+
+make run_serv_arm arg=5555
+make run_cli_arm arg=localhost:5555
+make run_serv_arm arg=6666
+make run_cli_arm arg=localhost:6666
+make run_serv_comp arg1=7777 arg2=localhost:5555 arg3=localhost:6666
+make run_cli_comp arg=localhost:7777
+
+
+Obviamente, o valor dos argumentos pode variar. Para poder executar os comandos, no makefile, supondo que os programas tenham nomes "svc_arm" e "cln_arm", "svc_comp" e "cln_comp", as regras seriam:
+
+run_serv_arm:
+     ./svc_arm $(arg)
+run_cli_arm:
+     ./cln_arm $(arg)
+run_serv_comp:
+     ./svc_comp $(arg1) $(arg2) $(arg3)
+run_cli_comp:
+     ./cln_comp $(arg)
+
+Dúvidas?
+Usem o fórum criado especialmente para esse exercício de programação para enviar suas dúvidas. Entretanto, não é permitido publicar código no fórum! Se você tem uma dúvida que envolve explicitamente um trecho de código, envie mensagem por e-mail diretamente para o professor.
